@@ -34,7 +34,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
     { name: 'AI Materials', href: '/materials', icon: Layers, badge: 'AI' },
     { name: 'Schedule Generator', href: '/schedule', icon: CalendarClock },
     { name: 'Progress & Tasks', href: '/progress', icon: CheckSquare },
-    { name: 'AI Assistant', href: '/assistant', icon: Bot, badge: 'GPT-4' },
+    { name: 'AI Assistant', href: '/assistant', icon: Bot, badge: 'Gemini' },
     { name: 'Reports & Export', href: '/reports', icon: FileText },
     { name: 'Settings & Supabase', href: '/settings', icon: Settings },
   ];

@@ -126,25 +126,43 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Section 2: OpenAI API Credentials */}
+          {/* Section 2: Google Gemini (Free Tier) & AI Credentials */}
           <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-5">
-            <div className="flex items-center gap-2.5 border-b pb-3">
-              <div className="p-2 bg-purple-100 text-purple-700 rounded-xl">
-                <Key className="h-5 w-5" />
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-gradient-to-tr from-blue-500 to-indigo-600 text-white rounded-xl shadow-sm">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Google Gemini API (100% Free Tier)</h3>
+                  <p className="text-xs text-slate-500">Powers BuildSmart Assistant and AI Material Recommendations</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">OpenAI API Engine</h3>
-                <p className="text-xs text-slate-500">Powers BuildSmart Assistant and AI Material Recommendations</p>
-              </div>
+
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
+                Free Tier Active
+              </span>
             </div>
 
             <div className="text-xs text-slate-600 space-y-2 leading-relaxed">
               <p>
-                Server-side routes securely consume <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-purple-700">OPENAI_API_KEY</code> without ever exposing credentials to the client browser.
+                BuildSmart AI uses the official Google Gemini SDK (<code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-blue-700">gemini-1.5-flash</code>). It is completely free for students, developers, and college presentations via Google AI Studio.
               </p>
               <p>
-                If no OpenAI key is configured, BuildSmart AI automatically switches to built-in heuristic civil engineering algorithms based on Indian Standards (IS 456, IS 1786), guaranteeing 100% uptime during presentations.
+                Server-side route handlers securely consume <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-blue-700">GEMINI_API_KEY</code> without exposing secrets to the client browser.
               </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3 pt-1">
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition-all"
+              >
+                <span>Get Free Gemini API Key (Google AI Studio)</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
             </div>
           </div>
 

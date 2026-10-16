@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 
 export const runtime = 'nodejs';
@@ -28,57 +29,92 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Message text is required' }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const openAiKey = process.env.OPENAI_API_KEY;
 
-    // Graceful offline fallback when OpenAI API key is not configured or placeholder
-    if (!apiKey || apiKey.includes('your-openai-api-key') || apiKey.trim() === '') {
-      return NextResponse.json({
-        role: 'assistant',
-        content: generateIntelligentFallbackResponse(message, projectContext),
-        isFallback: true,
-        notice: 'Response generated via BuildSmart Heuristic Civil Engineering Engine (Set OPENAI_API_KEY in .env.local for full GPT-4 reasoning).',
-      });
-    }
-
-    const openai = new OpenAI({ apiKey });
-
-    // Prepare contextual system message
     let contextualSystemPrompt = BUILDSMART_SYSTEM_PROMPT;
     if (projectContext) {
       contextualSystemPrompt += `\n\nCURRENT PROJECT CONTEXT:\nProject Name: ${projectContext.name}\nType: ${projectContext.project_type}\nLocation: ${projectContext.location}\nBuilt-up Area: ${projectContext.built_up_area} sq.ft\nFloors: ${projectContext.floors}\nBudget: ₹${projectContext.budget?.toLocaleString('en-IN')}\nStatus: ${projectContext.status}\nFinish Level: ${projectContext.finish_level}\nDescription: ${projectContext.description || 'N/A'}`;
     }
 
-    const messages = [
-      { role: 'system' as const, content: contextualSystemPrompt },
-      ...history.slice(-6).map((h: { role: string; content: string }) => ({
-        role: (h.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
-        content: h.content,
-      })),
-      { role: 'user' as const, content: message },
-    ];
+    // 1. Primary: Use Google Gemini (Free Tier)
+    if (geminiKey && !geminiKey.includes('your-free-gemini') && geminiKey.trim() !== '') {
+      try {
+        const genAI = new GoogleGenerativeAI(geminiKey);
+        const model = genAI.getGenerativeModel({
+          model: 'gemini-1.5-flash',
+          systemInstruction: contextualSystemPrompt,
+        });
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages,
-      temperature: 0.6,
-      max_tokens: 1200,
-    });
+        // Format conversation history for Gemini SDK
+        const contents = [
+          ...history.slice(-6).map((h: { role: string; content: string }) => ({
+            role: h.role === 'user' ? 'user' : 'model',
+            parts: [{ text: h.content }],
+          })),
+          { role: 'user', parts: [{ text: message }] },
+        ];
 
-    const replyContent = completion.choices[0]?.message?.content || 'Unable to generate response.';
+        const result = await model.generateContent({ contents });
+        const replyText = result.response.text();
 
+        return NextResponse.json({
+          role: 'assistant',
+          content: replyText,
+          isFallback: false,
+          provider: 'Google Gemini (Free Tier)',
+        });
+      } catch (geminiError) {
+        console.warn('Gemini API call failed, attempting fallback:', geminiError);
+      }
+    }
+
+    // 2. Secondary fallback: OpenAI (if configured)
+    if (openAiKey && !openAiKey.includes('your-openai-api-key') && openAiKey.trim() !== '') {
+      try {
+        const openai = new OpenAI({ apiKey: openAiKey });
+        const messages = [
+          { role: 'system' as const, content: contextualSystemPrompt },
+          ...history.slice(-6).map((h: { role: string; content: string }) => ({
+            role: (h.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+            content: h.content,
+          })),
+          { role: 'user' as const, content: message },
+        ];
+
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages,
+          temperature: 0.6,
+          max_tokens: 1200,
+        });
+
+        const replyContent = completion.choices[0]?.message?.content || 'Unable to generate response.';
+        return NextResponse.json({
+          role: 'assistant',
+          content: replyContent,
+          isFallback: false,
+          provider: 'OpenAI GPT-4o-mini',
+        });
+      } catch (openAiError) {
+        console.warn('OpenAI API call failed, using heuristic engine:', openAiError);
+      }
+    }
+
+    // 3. Graceful offline fallback when API key is not configured or offline during presentation
     return NextResponse.json({
       role: 'assistant',
-      content: replyContent,
-      isFallback: false,
+      content: generateIntelligentFallbackResponse(message, projectContext),
+      isFallback: true,
+      notice: 'Response generated via BuildSmart Heuristic Civil Engineering Engine. Add a free GEMINI_API_KEY from https://aistudio.google.com/ in .env.local to enable live generative AI responses.',
     });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown AI error';
     console.error('BuildSmart AI API Error:', errorMessage);
 
-    // Return a civil engineering fallback response rather than breaking the application
     return NextResponse.json({
       role: 'assistant',
-      content: `### ⚠️ Notice: Live AI Service Fallback\nWe could not connect to the OpenAI API endpoint (${errorMessage}).\n\nHere is standard civil engineering guidance for your query:\n\n1. **Standard Costs:** In Indian Tier 1/2 cities, basic structure + finishing typically ranges between **₹1,800 to ₹2,400 per sq.ft** for standard finish, and **₹2,500 to ₹3,500 per sq.ft** for premium quality.\n2. **Material Specs:** Use **IS 1786 Fe 500D** for earthquake-resistant ductile rebars and **IS 1489 PPC** for mass concrete slabs to prevent hydration cracking.\n3. **Curing:** Ensure minimum 10-14 days continuous wet ponding/hessian curing for all structural slabs.\n\n*Please ensure your \`OPENAI_API_KEY\` is configured in \`.env.local\` to resume real-time AI consultations.*`,
+      content: generateIntelligentFallbackResponse('general overview', null),
       isFallback: true,
       error: errorMessage,
     });
@@ -90,7 +126,7 @@ function generateIntelligentFallbackResponse(userPrompt: string, projectContext:
   const q = userPrompt.toLowerCase();
 
   if (q.includes('cost') || q.includes('budget') || q.includes('estimate') || q.includes('rate') || q.includes('price')) {
-    return `### 📊 Construction Cost Analysis & Benchmarks
+    return `### 📊 Construction Cost Analysis & Benchmarks (IS 456 / CPWD)
 
 For modern residential and commercial builds in India (2024-2026 indicative benchmarks):
 

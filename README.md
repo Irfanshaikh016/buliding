@@ -6,10 +6,10 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20RLS-3ECF8E?style=flat&logo=supabase)](https://supabase.com/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=flat&logo=openai)](https://openai.com/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-1.5_Flash_(Free)-4285F4?style=flat&logo=google)](https://aistudio.google.com/)
 [![Vitest](https://img.shields.io/badge/Tests-14%20Passed-brightgreen?style=flat&logo=vitest)](https://vitest.dev/)
 
-**BuildSmart AI** is a production-ready, full-stack college mini-project and SaaS platform designed for civil engineers, quantity surveyors, building contractors, and developers. It unifies **deterministic civil engineering arithmetic** with **OpenAI intelligence** to deliver accurate preliminary cost estimates, critical path schedules, material recommendations, and task management.
+**BuildSmart AI** is a production-ready, full-stack college mini-project and SaaS platform designed for civil engineers, quantity surveyors, building contractors, and developers. It unifies **deterministic civil engineering arithmetic** with **Google Gemini AI intelligence (Free Tier from Google AI Studio)** to deliver accurate preliminary cost estimates, critical path schedules, material recommendations, and task management without API costs.
 
 ---
 
